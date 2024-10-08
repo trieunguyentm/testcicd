@@ -1,0 +1,17 @@
+name: Example Workflow
+
+on: [push]
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout
+      - name: Run Script
+        uses: echo "Hello from Job 1"
+  job2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run another script
+        uses: echo "Hello from Job 2"
