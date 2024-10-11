@@ -9,9 +9,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Run Script
-        uses: echo "Hello from Job 1"
+        run: echo "Hello from Job 1"
+        
   job2:
     runs-on: ubuntu-latest
     steps:
       - name: Run another script
-        uses: echo "Hello from Job 2"
+        run: echo "Hello from Job 2"
