@@ -3,7 +3,13 @@ name: Deploy Next.js App
 on:
   push:
     branches:
-      - main 
+      - main # Trigger workflow when code push into branch main (production)
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+  
 jobs:
   deploy:
     runs-on: ubuntu-latest
