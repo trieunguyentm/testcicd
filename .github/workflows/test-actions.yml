@@ -1,18 +1,53 @@
-name: Example Workflow
+name: Running CI for App
+run-name: ${{github.actor}} is pushing code to branch ${{ github.ref }} 🚀
 
-on: [push]
+on:
+  push:
+    branches:
+      - 'develop'
+      - 'feature/**'
+      - 'release/**'
+      - 'hotfix/**'
+  pull_request:
+    branches:
+      - '*'
 
 jobs:
-  job1:
+  continuous-integration:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      # Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Run Script
-        run: echo "Hello from Job 1"
-        
-  job2:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run another script
-        run: echo "Hello from Job 2"
+
+      # Setup environment Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Cache npm dependencies
+      - name: Cache npm dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Run lint to check code
+      - name: Run Lint
+        run: npm run lint
+      
+      # Build code
+      - name: Build Application
+        run: npm run build
+      
+      # Run test
+      # - name : Run tests
+        # run: npm run test
