@@ -52,9 +52,8 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }} 
-        ssh-extra-args: "-o StrictHostKeyChecking=no"
+        ssh_options: "-o StrictHostKeyChecking=no"
         script: |
           docker pull ${{ secrets.DOCKER_USERNAME }}/nextjs-app:latest
-          docker stop nextjs-app || true
-          docker rm nextjs-app || true
+          docker rm -f nextjs-app || true
           docker run -d -p 8080:3000 --name nextjs-app ${{ secrets.DOCKER_USERNAME }}/nextjs-app:latest
