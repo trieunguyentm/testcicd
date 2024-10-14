@@ -40,8 +40,8 @@ jobs:
         platforms: linux/amd64
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/bio-page-app:latest
-          ${{ secrets.DOCKER_USERNAME }}/bio-page-app:${{ github.sha }}
+          ${{ secrets.DOCKER_USERNAME }}/nextjs-app:latest
+          ${{ secrets.DOCKER_USERNAME }}/nextjs-app:${{ github.sha }}
         cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/bio-page-app:cache
         cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/bio-page-app:cache,mode=max
 
