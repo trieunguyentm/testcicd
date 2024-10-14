@@ -1,9 +1,9 @@
 name: Deploy Next.js App
 
 on:
-  push:
-    branches:
-      - main # Trigger workflow when code push into branch main (production)
+  # push:
+  #   branches:
+  #     - main # Trigger workflow when code push into branch main (production)
   pull_request:
     types:
       - closed
