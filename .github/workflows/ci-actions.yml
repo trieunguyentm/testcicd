@@ -40,7 +40,7 @@ jobs:
       # Check Next.js Configuration
       - name: Check Next.js Configuration
         run: |
-          node -e "import('./next.config.mjs').then(config => { if (config.default.output !== 'standalone') { console.error('Error: 'output' should be set to 'standalone' in next.config.mjs'); process.exit(1); } });"
+          node -e "import('./next.config.mjs').then(config => { if (config.default.output !== 'standalone') { console.error('Error: \"output\" should be set to \"standalone\" in next.config.mjs'); process.exit(1); } });"
       
       # Build the application with standalone output
       - name: Build Application
