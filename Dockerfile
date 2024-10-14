@@ -23,7 +23,7 @@ ENV NODE_ENV=production
 # Copy các tệp cần thiết từ builder
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+# COPY --from=builder /app/public ./public
 
 # Tạo user không phải root
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
