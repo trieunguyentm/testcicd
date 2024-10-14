@@ -12,6 +12,7 @@ on:
   
 jobs:
   deploy:
+    if: github.event.pull_request.merged == true || github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -30,12 +31,19 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # Step 4: Build Docker image
+    # Build Docker Image
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
+        context: .
+        file: ./Dockerfile
+        platforms: linux/amd64
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/nextjs-app:latest
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/bio-page-app:latest
+          ${{ secrets.DOCKER_USERNAME }}/bio-page-app:${{ github.sha }}
+        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/bio-page-app:cache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/bio-page-app:cache,mode=max
 
     # Step 5: Deploy to Server by SSH
     - name: Deploy to Server
@@ -43,7 +51,8 @@ jobs:
       with:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
-        password: ${{ secrets.SERVER_PASSWORD }}  
+        password: ${{ secrets.SERVER_PASSWORD }} 
+        ssh-extra-args: "-o StrictHostKeyChecking=no"
         script: |
           docker pull ${{ secrets.DOCKER_USERNAME }}/nextjs-app:latest
           docker stop nextjs-app || true

@@ -21,20 +21,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Setup environment Node.js
+      # Setup Node.js environment with caching
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      # Cache npm dependencies
-      - name: Cache npm dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
       # Install dependencies
       - name: Install dependencies
@@ -43,11 +36,41 @@ jobs:
       # Run lint to check code
       - name: Run Lint
         run: npm run lint
+
+      # Check Next.js Configuration
+      - name: Check Next.js Configuration
+        run: |
+          node -e "import('./next.config.mjs').then(config => { if (config.default.output !== 'standalone') { console.error('Error: \"output\" should be set to \"standalone\" in next.config.mjs'); process.exit(1); } });"
       
-      # Build code
+      # Build the application with standalone output
       - name: Build Application
+        env:
+          NEXT_PUBLIC_DIRECTUS_URL: 'https://directus-api-url.com'
         run: npm run build
       
-      # Run test
-      # - name : Run tests
-        # run: npm run test
+      # Build Docker Image
+      - name: Build Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          tags: test-app:latest
+          load: true
+
+      # Run Docker Container
+      - name: Run Docker Container
+        run: |
+          docker run -d -p 3000:3000 --name test-app test-app:latest
+          for i in {1..10}; do
+            if curl -f http://localhost:3000 > /dev/null 2>&1; then
+              echo "Application is up!"
+              break
+            fi
+            echo "Waiting for the application to start..."
+            sleep 5
+          done
+          curl -f http://localhost:3000 || (echo 'Container health check failed'; docker logs your-app-container; exit 1)
+          docker stop test-app
+          docker rm test-app
+  

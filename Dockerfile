@@ -1,73 +1,31 @@
-# # Stage 1: Build the app
-# FROM node:18-alpine AS builder
-
-# WORKDIR /app
-
-# # Copy package.json and package-lock.json and install dependencies
-# COPY package.json ./
-# COPY package-lock.json ./
-# RUN npm install
-
-# # Copy rest of the application code
-# COPY . .
-
-# # Build the Next.js app
-# RUN npm run build
-
-# # Stage 2: Serve the app
-# FROM node:18-alpine AS runner
-
-# WORKDIR /app
-
-# # Copy the build output from the builder stage
-# COPY --from=builder /app ./
-
-# # Expose port to serve the app
-# EXPOSE 3000
-
-# # Start the Next.js application
-# CMD ["npm", "start"]
-# Sử dụng base image node:20-alpine cho giai đoạn builder
-FROM node:20-alpine AS builder
-
-# Tạo thư mục làm việc
+# Stage 1: Cài đặt dependencies (chỉ cho production)
+FROM node:20-alpine AS deps
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
 
-# Copy file package.json và package-lock.json để cài đặt dependencies
-COPY package*.json ./
-
-# Cài đặt denpendencies
-RUN npm ci
-# RUN npm install
-
-# Copy mã nguồn vào Container
+# Stage 2: Build ứng dụng
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Build ứng dụng Next.js
+# Thiết lập output dạng standalone trong next.config.js
+# { "output": "standalone" }
 RUN npm run build
 
-# Tạo giai đoạn production, sử dụng lại giai đoạn builder
-FROM node:20-alpine AS production
+# Stage 3: Image cho production
+FROM node:20-alpine AS runner
+WORKDIR /app
 
 # Thiết lập biến môi trường cho production
 ENV NODE_ENV=production
 
-# Tạo thư mục làm việc
-WORKDIR /app
-
-# Copy các file từ builder sang production
-COPY --from=builder /app/.next ./.next
+# Copy các tệp cần thiết từ builder
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 # COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
 
-# Dọn dẹp các devDependencies để giảm kích thước image
-RUN npm prune --production
-
-# Dọn dẹp cache npm để giảm kích thước image
-RUN npm cache clean --force
-
-# Tạo một user không phải root
+# Tạo user không phải root
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
@@ -75,4 +33,4 @@ USER appuser
 EXPOSE 3000
 
 # Chạy ứng dụng
-CMD [ "npm", "start" ]
+CMD ["node", "server.js"]
